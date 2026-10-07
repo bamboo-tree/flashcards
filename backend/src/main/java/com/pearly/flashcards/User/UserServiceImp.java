@@ -24,16 +24,20 @@ public class UserServiceImp implements UserService {
     }
 
     /**
-     * Creates new User and saves it in JPA repository.
+     * Create bew User and save it in the JPA repository.
      *
      * @param createUserDto DTO body of the new User.
-     * @return UserDetailsDto of newly created User.
+     * @return Detailed DTO of newly created User entity.
      */
     @Override
     public UserDetailsDto create(CreateUserDto createUserDto) {
-        if (createUserDto.getUserName().isBlank()) {
-            throw new IllegalArgumentException("Provided DTO is invalid, createUserDto.userName is blank.");
+        if (createUserDto == null) {
+            throw new IllegalArgumentException("Provided createUserDto is invalid - DTO is null");
         }
+        if (createUserDto.getUserName().isBlank()) {
+            throw new IllegalArgumentException("Provided createUserDto is invalid - userName is blank");
+        }
+
         User newUser = this.userRepository.save(this.modelMapper.map(createUserDto, User.class));
         UserDetailsDto dto = this.modelMapper.map(newUser, UserDetailsDto.class);
 
@@ -43,7 +47,7 @@ public class UserServiceImp implements UserService {
     /**
      * Find all Users in the JPA repository.
      *
-     * @return List of all UserDto.
+     * @return List of User DTO.
      */
     @Override
     public List<UserDto> findAll() {
@@ -57,55 +61,54 @@ public class UserServiceImp implements UserService {
     }
 
     /**
-     * Find User by id.
-     * This method is transactional.
+     * Find User by id in the JPA repository.
      *
-     * @param id User's id.
-     * @return Detailed User DTO.
+     * @param id Id of the User.
+     * @return Detailed DTO of found User entity.
      */
     @Transactional(readOnly = true)
     @Override
     public UserDetailsDto findById(long id) {
         User user = this.userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("There is no User with id=" + id));
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Provided id is invalid - there is no entity with id=" + id));
         UserDetailsDto dto = this.modelMapper.map(user, UserDetailsDto.class);
 
         return dto;
     }
 
     /**
-     * Delete User from JPA repository by id.
+     * Delete User by id from the JPA repository.
      *
-     * @param id User's id.
+     * @param id Id of the User.
      */
     @Override
     public void deleteById(long id) {
         User user = this.userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("There is no User with id=" + id));
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Provided id is invalid - there is no entity with id=" + id));
 
-        if (user != null) {
-            this.userRepository.deleteById(id);
-        }
+        this.userRepository.delete(user);
     }
 
     /**
-     * Update User data in place.
-     * This method is transactional.
+     * Update User body with provided id in the JPA repository.
      *
-     * @param updateUser Updated User data.
-     * @param id         User's id to update.
-     * @return UserDto with updated data.
+     * @param updateUser DTO with updated body. Only present data will be replaced.
+     * @param id         Id of the User.
+     * @return DTO of updated User entity.
      */
     @Transactional
     @Override
     public UserDto update(CreateUserDto updateUser, long id) {
         if (updateUser == null) {
-            throw new IllegalArgumentException("No update data provided");
+            throw new IllegalArgumentException("Provided updateUser is invalid - DTO is null");
         }
         User user = this.userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("There is no User with id=" + id));
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Provided id is invalid - there is no entity with id=" + id));
 
-        if (updateUser.getUserName() != null && !updateUser.getUserName().isBlank()) {
+        if (!updateUser.getUserName().isBlank()) {
             user.setUserName(updateUser.getUserName());
         }
 

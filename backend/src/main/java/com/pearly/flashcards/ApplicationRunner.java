@@ -6,6 +6,10 @@ import java.util.List;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import com.pearly.flashcards.Deck.DeckServiceImp;
+import com.pearly.flashcards.Deck.dto.CreateDeckDto;
+import com.pearly.flashcards.Deck.dto.DeckDetailsDto;
+import com.pearly.flashcards.Deck.dto.DeckDto;
 import com.pearly.flashcards.User.UserServiceImp;
 import com.pearly.flashcards.User.dto.CreateUserDto;
 import com.pearly.flashcards.User.dto.UserDetailsDto;
@@ -14,10 +18,13 @@ import com.pearly.flashcards.User.dto.UserDto;
 @Component
 public class ApplicationRunner implements CommandLineRunner {
     private final UserServiceImp userServiceImp;
+    private final DeckServiceImp deckServiceImp;
 
     public ApplicationRunner(
-            UserServiceImp userServiceImp) {
+            UserServiceImp userServiceImp,
+            DeckServiceImp deckServiceImp) {
         this.userServiceImp = userServiceImp;
+        this.deckServiceImp = deckServiceImp;
     }
 
     @Override
@@ -51,13 +58,46 @@ public class ApplicationRunner implements CommandLineRunner {
         System.out.println(updatedUser.toString());
 
         System.out.println("==================== TEST: findAll() ====================");
-        List<UserDto> findAllResult = this.userServiceImp.findAll();
-        findAllResult.forEach(e -> System.out.println(e.toString()));
+        List<UserDto> findAllUserResult = this.userServiceImp.findAll();
+        findAllUserResult.forEach(e -> System.out.println(e.toString()));
 
         System.out.println("==================== TEST: findById() ====================");
         long findId = 2L;
-        UserDetailsDto byId = this.userServiceImp.findById(findId);
-        System.out.println(byId.toString());
+        UserDetailsDto userById = this.userServiceImp.findById(findId);
+        System.out.println(userById.toString());
 
+        System.out.println("++++++++++++++++++++ UserServiceImp ++++++++++++++++++++");
+
+        System.out.println("==================== TEST: findById() ====================");
+        List<CreateDeckDto> newDecks = new ArrayList<>();
+        newDecks.add(new CreateDeckDto("Apple"));
+        newDecks.add(new CreateDeckDto("Banana"));
+        newDecks.add(new CreateDeckDto("Cherry"));
+        newDecks.add(new CreateDeckDto("Dragon Fruit"));
+        newDecks.forEach(e -> System.out.println(e.toString()));
+
+        List<DeckDetailsDto> createdDecks = new ArrayList<>();
+        newDecks.forEach(e -> {
+            DeckDetailsDto created = this.deckServiceImp.create(e);
+            createdDecks.add(created);
+        });
+        createdDecks.forEach(e -> System.out.println(e.toString()));
+
+        System.out.println("==================== TEST: deleteById() ====================");
+        this.deckServiceImp.deleteById(deleteId);
+        System.out.println("Deleting Deck with id=" + deleteId);
+
+        System.out.println("==================== TEST: update() ====================");
+        CreateDeckDto newDeckData = new CreateDeckDto("Watermelon");
+        DeckDto updatedDeck = this.deckServiceImp.update(newDeckData, updateId);
+        System.out.println(updatedDeck.toString());
+
+        System.out.println("==================== TEST: findAll() ====================");
+        List<DeckDto> findAllDeckResult = this.deckServiceImp.findAll();
+        findAllDeckResult.forEach(e -> System.out.println(e.toString()));
+
+        System.out.println("==================== TEST: findById() ====================");
+        DeckDetailsDto deckById = this.deckServiceImp.findById(findId);
+        System.out.println(deckById.toString());
     }
 }

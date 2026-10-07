@@ -17,5 +17,4 @@ import lombok.ToString;
 @ToString
 public class CreateDeckDto {
     private String name;
-    private List<CardDto> cards;
 }
