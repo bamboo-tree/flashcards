@@ -17,6 +17,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -26,6 +27,7 @@ import lombok.Setter;
 @Setter
 @RequiredArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
 public class Deck {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,4 +42,16 @@ public class Deck {
     @ManyToOne
     @JoinColumn(name = "person_id")
     private User owner;
+
+    public boolean hasOwner() {
+        return (this.owner != null);
+    }
+
+    public void addOwner(User owner) {
+        this.owner = owner;
+    }
+
+    public void deleteOwner(User owner) {
+        this.owner = null;
+    }
 }

@@ -6,6 +6,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.pearly.flashcards.Deck.Deck;
+import com.pearly.flashcards.Deck.DeckRepository;
 import com.pearly.flashcards.User.dto.CreateUserDto;
 import com.pearly.flashcards.User.dto.UserDetailsDto;
 import com.pearly.flashcards.User.dto.UserDto;
@@ -14,12 +16,15 @@ import com.pearly.flashcards.User.dto.UserDto;
 public class UserServiceImp implements UserService {
 
     private final UserRepository userRepository;
+    private final DeckRepository deckRepository;
     private final ModelMapper modelMapper;
 
     public UserServiceImp(
             UserRepository userRepository,
+            DeckRepository deckRepository,
             ModelMapper modelMapper) {
         this.userRepository = userRepository;
+        this.deckRepository = deckRepository;
         this.modelMapper = modelMapper;
     }
 
@@ -114,6 +119,44 @@ public class UserServiceImp implements UserService {
 
         User updatedUser = this.userRepository.save(user);
         UserDto dto = this.modelMapper.map(updatedUser, UserDto.class);
+
+        return dto;
+    }
+
+    @Transactional
+    @Override
+    public UserDetailsDto addDeckById(long userId, long deckId) {
+        User user = this.userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Provided userId is invalid - there is no entity with id=" + userId));
+        Deck deck = this.deckRepository.findById(deckId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Provided deckId is invalid - there is no entity with id=" + deckId));
+
+        user.addDeck(deck);
+        deck.addOwner(user);
+
+        User updatedUser = this.userRepository.save(user);
+        UserDetailsDto dto = this.modelMapper.map(updatedUser, UserDetailsDto.class);
+
+        return dto;
+    }
+
+    @Transactional
+    @Override
+    public UserDetailsDto deleteDeckById(long userId, long deckId) {
+        User user = this.userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Provided userId is invalid - there is no entity with id=" + userId));
+        Deck deck = this.deckRepository.findById(deckId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Provided deckId is invalid - there is no entity with id=" + deckId));
+
+        user.deleteDeck(deck);
+        deck.deleteOwner(user);
+
+        User updatedUser = this.userRepository.save(user);
+        UserDetailsDto dto = this.modelMapper.map(updatedUser, UserDetailsDto.class);
 
         return dto;
     }

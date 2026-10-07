@@ -14,6 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -23,6 +24,7 @@ import lombok.Setter;
 @Setter
 @RequiredArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,4 +35,23 @@ public class User {
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Deck> decks = new ArrayList<>();
+
+    public boolean hasDeck(Deck deck) {
+        return this.decks.contains(deck);
+    }
+
+    public void addDeck(Deck deck) {
+        if (deck.hasOwner()) {
+            throw new IllegalStateException("Deck already has the owner. Cannot reassign.");
+        }
+
+        this.decks.add(deck);
+    }
+
+    public void deleteDeck(Deck deck) {
+        if (!hasDeck(deck)) {
+            throw new IllegalStateException("Provided deck does not belong to this User.");
+        }
+        this.decks.remove(deck);
+    }
 }
