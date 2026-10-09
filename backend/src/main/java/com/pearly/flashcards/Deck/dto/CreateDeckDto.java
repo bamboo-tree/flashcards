@@ -1,9 +1,5 @@
 package com.pearly.flashcards.Deck.dto;
 
-import java.util.List;
-
-import com.pearly.flashcards.Card.dto.CardDto;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

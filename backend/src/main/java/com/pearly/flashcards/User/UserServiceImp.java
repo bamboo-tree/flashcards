@@ -29,7 +29,7 @@ public class UserServiceImp implements UserService {
     }
 
     /**
-     * Create bew User and save it in the JPA repository.
+     * Create new User and save it in the JPA repository.
      *
      * @param createUserDto DTO body of the new User.
      * @return Detailed DTO of newly created User entity.

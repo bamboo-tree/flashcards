@@ -6,6 +6,10 @@ import java.util.List;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import com.pearly.flashcards.Card.CardServiceImp;
+import com.pearly.flashcards.Card.dto.CardDetailsDto;
+import com.pearly.flashcards.Card.dto.CardDto;
+import com.pearly.flashcards.Card.dto.CreateCardDto;
 import com.pearly.flashcards.Deck.DeckServiceImp;
 import com.pearly.flashcards.Deck.dto.CreateDeckDto;
 import com.pearly.flashcards.Deck.dto.DeckDetailsDto;
@@ -19,12 +23,15 @@ import com.pearly.flashcards.User.dto.UserDto;
 public class ApplicationRunner implements CommandLineRunner {
     private final UserServiceImp userServiceImp;
     private final DeckServiceImp deckServiceImp;
+    private final CardServiceImp cardServiceImp;
 
     public ApplicationRunner(
             UserServiceImp userServiceImp,
-            DeckServiceImp deckServiceImp) {
+            DeckServiceImp deckServiceImp,
+            CardServiceImp cardServiceImp) {
         this.userServiceImp = userServiceImp;
         this.deckServiceImp = deckServiceImp;
+        this.cardServiceImp = cardServiceImp;
     }
 
     @Override
@@ -34,9 +41,43 @@ public class ApplicationRunner implements CommandLineRunner {
         long updateId = 4L;
         long findId = 2L;
 
-        System.out.println("++++++++++++++++++++ DeckServiceImp ++++++++++++++++++++");
+        System.out.println("++++++++++++++++++++ CardServiceImp ++++++++++++++++++++");
+
+        System.out.println("==================== TEST: create() ====================");
+        List<CreateCardDto> newCards = new ArrayList<>();
+        newCards.add(new CreateCardDto("Question #1", "Answer #1"));
+        newCards.add(new CreateCardDto("Question #2", "Answer #2"));
+        newCards.add(new CreateCardDto("Question #3", "Answer #3"));
+        newCards.add(new CreateCardDto("Question #3", "Answer #3"));
+        newCards.forEach(e -> System.out.println(e.toString()));
+
+        List<CardDetailsDto> createdCards = new ArrayList<>();
+        newCards.forEach(e -> {
+            CardDetailsDto created = this.cardServiceImp.create(e);
+            createdCards.add(created);
+        });
+        createdCards.forEach(e -> System.out.println(e.toString()));
+
+        System.out.println("==================== TEST: deleteById() ====================");
+        this.cardServiceImp.deleteById(deleteId);
+        System.out.println("Deleting Card with id=" + deleteId);
+
+        System.out.println("==================== TEST: update() ====================");
+        CreateCardDto newCardData = new CreateCardDto("QUESTION UPDATE", "ANSWER UPDATE");
+        CardDto updatedCard = this.cardServiceImp.update(newCardData, updateId);
+        System.out.println(updatedCard.toString());
+
+        System.out.println("==================== TEST: findAll() ====================");
+        List<CardDto> findAllCardResult = this.cardServiceImp.findAll();
+        findAllCardResult.forEach(e -> System.out.println(e.toString()));
 
         System.out.println("==================== TEST: findById() ====================");
+        CardDetailsDto cardById = this.cardServiceImp.findById(findId);
+        System.out.println(cardById.toString());
+
+        System.out.println("++++++++++++++++++++ DeckServiceImp ++++++++++++++++++++");
+
+        System.out.println("==================== TEST: create() ====================");
         List<CreateDeckDto> newDecks = new ArrayList<>();
         newDecks.add(new CreateDeckDto("Apple"));
         newDecks.add(new CreateDeckDto("Banana"));

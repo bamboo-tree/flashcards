@@ -1,7 +1,5 @@
 package com.pearly.flashcards.Card.dto;
 
-import com.pearly.flashcards.Deck.dto.DeckDto;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,5 +15,4 @@ public class CardDetailsDto {
     private Long id;
     private String question;
     private String answer;
-    private DeckDto deck;
 }
