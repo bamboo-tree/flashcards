@@ -10,6 +10,8 @@ import com.pearly.flashcards.Card.dto.CardDetailsDto;
 import com.pearly.flashcards.Card.dto.CardDto;
 import com.pearly.flashcards.Card.dto.CreateCardDto;
 
+import jakarta.persistence.EntityNotFoundException;
+
 @Service
 public class CardServiceImp implements CardService {
     private final CardRepository cardRepository;
@@ -72,7 +74,7 @@ public class CardServiceImp implements CardService {
     @Override
     public CardDetailsDto findById(long id) {
         Card card = this.cardRepository.findById(id).orElseThrow(
-                () -> new IllegalArgumentException("Provided id is invalid - there is no entity with id=" + id));
+                () -> new EntityNotFoundException("Provided id is invalid - there is no entity with id=" + id));
         CardDetailsDto dto = this.modelMapper.map(card, CardDetailsDto.class);
 
         return dto;
@@ -85,10 +87,10 @@ public class CardServiceImp implements CardService {
      */
     @Override
     public void deleteById(long id) {
-        Card card = this.cardRepository.findById(id).orElseThrow(
-                () -> new IllegalArgumentException("Provided id is invalid - there is no entity with id=" + id));
+        this.cardRepository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("Provided id is invalid - there is no entity with id=" + id));
 
-        this.cardRepository.delete(card);
+        this.cardRepository.deleteById(id);
     }
 
     /**
@@ -105,12 +107,12 @@ public class CardServiceImp implements CardService {
             throw new IllegalArgumentException("Provided updateCard is invalid - DTO is null");
         }
         Card card = this.cardRepository.findById(id).orElseThrow(
-                () -> new IllegalArgumentException("Provided id is invalid - there is no entity with id=" + id));
+                () -> new EntityNotFoundException("Provided id is invalid - there is no entity with id=" + id));
 
-        if (!updateCard.getQuestion().isBlank()) {
+        if (updateCard.getQuestion() != null && !updateCard.getQuestion().isBlank()) {
             card.setQuestion(updateCard.getQuestion());
         }
-        if (!updateCard.getAnswer().isBlank()) {
+        if (updateCard.getAnswer() != null && !updateCard.getAnswer().isBlank()) {
             card.setAnswer(updateCard.getAnswer());
         }
 
