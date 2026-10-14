@@ -15,7 +15,7 @@ public interface UserService {
 
     public void deleteById(long id);
 
-    public UserDto update(CreateUserDto updatedUser, long id);
+    public UserDto update(CreateUserDto update, long id);
 
     public UserDetailsDto addDeckById(long userId, long deckId);
 

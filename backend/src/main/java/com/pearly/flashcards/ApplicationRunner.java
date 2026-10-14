@@ -39,7 +39,7 @@ public class ApplicationRunner implements CommandLineRunner {
 
         long deleteId = 1L;
         long updateId = 4L;
-        long findId = 2L;
+        long findId = 4L;
 
         System.out.println("++++++++++++++++++++ CardServiceImp ++++++++++++++++++++");
 
@@ -149,7 +149,7 @@ public class ApplicationRunner implements CommandLineRunner {
         userWithDeck = this.userServiceImp.addDeckById(userId, deckId + 1);
         System.out.println(userWithDeck.toString());
 
-        System.out.println("==================== TEST: addDeckById() ====================");
+        System.out.println("==================== TEST: deleteDeckById() ====================");
         UserDetailsDto userWithRemovedDeck = this.userServiceImp.deleteDeckById(userId, deckId);
         System.out.println(userWithRemovedDeck.toString());
 

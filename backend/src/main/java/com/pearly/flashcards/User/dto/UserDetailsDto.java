@@ -1,5 +1,6 @@
 package com.pearly.flashcards.User.dto;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.pearly.flashcards.Deck.dto.DeckDto;
@@ -19,4 +20,6 @@ public class UserDetailsDto {
     private Long id;
     private String userName;
     private List<DeckDto> decks;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

@@ -1,6 +1,8 @@
 package com.pearly.flashcards.User;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -12,7 +14,12 @@ import com.pearly.flashcards.User.dto.CreateUserDto;
 import com.pearly.flashcards.User.dto.UserDetailsDto;
 import com.pearly.flashcards.User.dto.UserDto;
 
+import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Transactional
+@Slf4j
 public class UserServiceImp implements UserService {
 
     private final UserRepository userRepository;
@@ -36,12 +43,9 @@ public class UserServiceImp implements UserService {
      */
     @Override
     public UserDetailsDto create(CreateUserDto createUserDto) {
-        if (createUserDto == null) {
-            throw new IllegalArgumentException("Provided createUserDto is invalid - DTO is null");
-        }
-        if (createUserDto.getUserName().isBlank()) {
-            throw new IllegalArgumentException("Provided createUserDto is invalid - userName is blank");
-        }
+        log.info("Create new User.");
+
+        Objects.requireNonNull(createUserDto, "Invalid argument: createUserDto must not be null.");
 
         User newUser = this.userRepository.save(this.modelMapper.map(createUserDto, User.class));
         UserDetailsDto dto = this.modelMapper.map(newUser, UserDetailsDto.class);
@@ -56,11 +60,13 @@ public class UserServiceImp implements UserService {
      */
     @Override
     public List<UserDto> findAll() {
+        log.info("Find all Users.");
+
         List<UserDto> dtos = this.userRepository
                 .findAll()
                 .stream()
                 .map(e -> this.modelMapper.map(e, UserDto.class))
-                .toList();
+                .collect(Collectors.toList());
 
         return dtos;
     }
@@ -71,11 +77,15 @@ public class UserServiceImp implements UserService {
      * @param id Id of the User.
      * @return Detailed DTO of found User entity.
      */
-    @Transactional(readOnly = true)
     @Override
     public UserDetailsDto findById(long id) {
-        User user = this.userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(
+        log.info("Find User id={}.", id);
+
+        Objects.requireNonNull(id, "Invalid argument: id must not be null.");
+
+        User user = this.userRepository
+                .findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(
                         "Provided id is invalid - there is no entity with id=" + id));
         UserDetailsDto dto = this.modelMapper.map(user, UserDetailsDto.class);
 
@@ -89,8 +99,13 @@ public class UserServiceImp implements UserService {
      */
     @Override
     public void deleteById(long id) {
-        User user = this.userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(
+        log.info("Delete User id={}.", id);
+
+        Objects.requireNonNull(id, "Invalid argument: id must not be null.");
+
+        User user = this.userRepository
+                .findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(
                         "Provided id is invalid - there is no entity with id=" + id));
 
         this.userRepository.delete(user);
@@ -103,60 +118,74 @@ public class UserServiceImp implements UserService {
      * @param id         Id of the User.
      * @return DTO of updated User entity.
      */
-    @Transactional
     @Override
-    public UserDto update(CreateUserDto updateUser, long id) {
-        if (updateUser == null) {
-            throw new IllegalArgumentException("Provided updateUser is invalid - DTO is null");
-        }
-        User user = this.userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(
+    public UserDto update(CreateUserDto update, long id) {
+        log.info("Update User id={}.", id);
+
+        Objects.requireNonNull(update, "Invalid argument: update must not be null.");
+        Objects.requireNonNull(id, "Invalid argument: id must not be null.");
+
+        User user = this.userRepository
+                .findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(
                         "Provided id is invalid - there is no entity with id=" + id));
 
-        if (!updateUser.getUserName().isBlank()) {
-            user.setUserName(updateUser.getUserName());
+        if (update.getUserName() != null) {
+            user.setUserName(update.getUserName());
         }
 
-        User updatedUser = this.userRepository.save(user);
-        UserDto dto = this.modelMapper.map(updatedUser, UserDto.class);
+        user = this.userRepository.save(user); // Synchronize data in JPA
+        UserDto dto = this.modelMapper.map(user, UserDto.class);
 
         return dto;
     }
 
-    @Transactional
     @Override
     public UserDetailsDto addDeckById(long userId, long deckId) {
-        User user = this.userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException(
+        log.info("Add Deck id={} to User id={}.", deckId, userId);
+
+        Objects.requireNonNull(userId, "Invalid argument: userId must not be null.");
+        Objects.requireNonNull(deckId, "Invalid argument: deckId must not be null.");
+
+        User user = this.userRepository
+                .findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException(
                         "Provided userId is invalid - there is no entity with id=" + userId));
-        Deck deck = this.deckRepository.findById(deckId)
-                .orElseThrow(() -> new IllegalArgumentException(
+        Deck deck = this.deckRepository
+                .findById(deckId)
+                .orElseThrow(() -> new EntityNotFoundException(
                         "Provided deckId is invalid - there is no entity with id=" + deckId));
 
         user.addDeck(deck);
         deck.addOwner(user);
 
-        User updatedUser = this.userRepository.save(user);
-        UserDetailsDto dto = this.modelMapper.map(updatedUser, UserDetailsDto.class);
+        user = this.userRepository.save(user); // Synchronize data in JPA
+        UserDetailsDto dto = this.modelMapper.map(user, UserDetailsDto.class);
 
         return dto;
     }
 
-    @Transactional
     @Override
     public UserDetailsDto deleteDeckById(long userId, long deckId) {
-        User user = this.userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException(
+        log.info("Delete Deck id={} from User id={}.", deckId, userId);
+
+        Objects.requireNonNull(userId, "Invalid argument: userId must not be null.");
+        Objects.requireNonNull(deckId, "Invalid argument: deckId must not be null.");
+
+        User user = this.userRepository
+                .findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException(
                         "Provided userId is invalid - there is no entity with id=" + userId));
-        Deck deck = this.deckRepository.findById(deckId)
-                .orElseThrow(() -> new IllegalArgumentException(
+        Deck deck = this.deckRepository
+                .findById(deckId)
+                .orElseThrow(() -> new EntityNotFoundException(
                         "Provided deckId is invalid - there is no entity with id=" + deckId));
 
         user.deleteDeck(deck);
         deck.deleteOwner(user);
 
-        User updatedUser = this.userRepository.save(user);
-        UserDetailsDto dto = this.modelMapper.map(updatedUser, UserDetailsDto.class);
+        user = this.userRepository.save(user); // Synchronize data in JPA
+        UserDetailsDto dto = this.modelMapper.map(user, UserDetailsDto.class);
 
         return dto;
     }

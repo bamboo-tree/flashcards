@@ -1,5 +1,6 @@
 package com.pearly.flashcards.User;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,8 +13,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-
-import lombok.AllArgsConstructor;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +27,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @RequiredArgsConstructor
-@AllArgsConstructor
 @EqualsAndHashCode
 public class User {
     @Id
@@ -31,10 +34,28 @@ public class User {
     private Long id;
 
     @Column(name = "user_name", nullable = false, unique = true)
+    @NotBlank(message = "UserName must not be blank.")
+    @Size(min = 3, max = 50, message = "UserName must have at least 3 and at most 50 characters.")
     private String userName;
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Deck> decks = new ArrayList<>();
+
+    @NotNull(message = "CreatedAt must not be blank.")
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    // END OF ENTITY DEFINITION
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 
     public boolean hasDeck(Deck deck) {
         return this.decks.contains(deck);
@@ -44,7 +65,6 @@ public class User {
         if (deck.hasOwner()) {
             throw new IllegalStateException("Deck already has the owner. Cannot reassign.");
         }
-
         this.decks.add(deck);
     }
 
