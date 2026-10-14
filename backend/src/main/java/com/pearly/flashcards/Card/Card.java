@@ -34,4 +34,16 @@ public class Card {
     @ManyToOne
     @JoinColumn(name = "deck_id")
     private Deck deck;
+
+    public boolean hasDeck() {
+        return (this.deck != null);
+    }
+
+    public void addDeck(Deck deck) {
+        this.deck = deck;
+    }
+
+    public void deleteDeck() {
+        this.deck = null;
+    }
 }

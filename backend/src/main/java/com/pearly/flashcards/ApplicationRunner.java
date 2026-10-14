@@ -40,6 +40,9 @@ public class ApplicationRunner implements CommandLineRunner {
         long deleteId = 1L;
         long updateId = 4L;
         long findId = 4L;
+        long cardId = 4L;
+        long deckId = 4L;
+        long userId = 4L;
 
         System.out.println("++++++++++++++++++++ CardServiceImp ++++++++++++++++++++");
 
@@ -48,7 +51,8 @@ public class ApplicationRunner implements CommandLineRunner {
         newCards.add(new CreateCardDto("Question #1", "Answer #1"));
         newCards.add(new CreateCardDto("Question #2", "Answer #2"));
         newCards.add(new CreateCardDto("Question #3", "Answer #3"));
-        newCards.add(new CreateCardDto("Question #3", "Answer #3"));
+        newCards.add(new CreateCardDto("Question #4", "Answer #4"));
+        newCards.add(new CreateCardDto("Question #5", "Answer #5"));
         newCards.forEach(e -> System.out.println(e.toString()));
 
         List<CardDetailsDto> createdCards = new ArrayList<>();
@@ -83,6 +87,7 @@ public class ApplicationRunner implements CommandLineRunner {
         newDecks.add(new CreateDeckDto("Banana"));
         newDecks.add(new CreateDeckDto("Cherry"));
         newDecks.add(new CreateDeckDto("Dragon Fruit"));
+        newDecks.add(new CreateDeckDto("Some Fruit That Starts With The E"));
         newDecks.forEach(e -> System.out.println(e.toString()));
 
         List<DeckDetailsDto> createdDecks = new ArrayList<>();
@@ -109,6 +114,15 @@ public class ApplicationRunner implements CommandLineRunner {
         DeckDetailsDto deckById = this.deckServiceImp.findById(findId);
         System.out.println(deckById.toString());
 
+        System.out.println("==================== TEST: addCardById() ====================");
+        DeckDetailsDto deckWithCard = this.deckServiceImp.addCardById(deckId, cardId);
+        deckWithCard = this.deckServiceImp.addCardById(deckId, cardId + 1);
+        System.out.println(deckWithCard.toString());
+
+        System.out.println("==================== TEST: deleteDeckById() ====================");
+        DeckDetailsDto deckWithRemovedCard = this.deckServiceImp.deleteCardById(deckId, cardId);
+        System.out.println(deckWithRemovedCard.toString());
+
         System.out.println("++++++++++++++++++++ UserServiceImp ++++++++++++++++++++");
 
         System.out.println("==================== TEST: create() ====================");
@@ -117,6 +131,7 @@ public class ApplicationRunner implements CommandLineRunner {
         newUsers.add(new CreateUserDto("Adam_Adams"));
         newUsers.add(new CreateUserDto("Tim_Cheese"));
         newUsers.add(new CreateUserDto("Jonathan_Porks"));
+        newUsers.add(new CreateUserDto("Tripi_Tropi"));
         newUsers.forEach(e -> System.out.println(e.toString()));
 
         List<UserDetailsDto> createdUsers = new ArrayList<>();
@@ -144,7 +159,6 @@ public class ApplicationRunner implements CommandLineRunner {
         System.out.println(userById.toString());
 
         System.out.println("==================== TEST: addDeckById() ====================");
-        long userId = 2, deckId = 2;
         UserDetailsDto userWithDeck = this.userServiceImp.addDeckById(userId, deckId);
         userWithDeck = this.userServiceImp.addDeckById(userId, deckId + 1);
         System.out.println(userWithDeck.toString());
@@ -152,6 +166,5 @@ public class ApplicationRunner implements CommandLineRunner {
         System.out.println("==================== TEST: deleteDeckById() ====================");
         UserDetailsDto userWithRemovedDeck = this.userServiceImp.deleteDeckById(userId, deckId);
         System.out.println(userWithRemovedDeck.toString());
-
     }
 }

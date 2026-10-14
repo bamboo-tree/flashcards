@@ -140,6 +140,13 @@ public class UserServiceImp implements UserService {
         return dto;
     }
 
+    /**
+     * Add Deck to User.
+     *
+     * @param userId Id of the User.
+     * @param deckId Id of the Deck.
+     * @return Detailed DTO of updated User entity.
+     */
     @Override
     public UserDetailsDto addDeckById(long userId, long deckId) {
         log.info("Add Deck id={} to User id={}.", deckId, userId);
@@ -165,6 +172,13 @@ public class UserServiceImp implements UserService {
         return dto;
     }
 
+    /**
+     * Delete Deck from User.
+     *
+     * @param userId Id of the User.
+     * @param deckId Id of the Deck.
+     * @return Detailed DTO of updated User entity.
+     */
     @Override
     public UserDetailsDto deleteDeckById(long userId, long deckId) {
         log.info("Delete Deck id={} from User id={}.", deckId, userId);
@@ -182,7 +196,7 @@ public class UserServiceImp implements UserService {
                         "Provided deckId is invalid - there is no entity with id=" + deckId));
 
         user.deleteDeck(deck);
-        deck.deleteOwner(user);
+        deck.deleteOwner();
 
         user = this.userRepository.save(user); // Synchronize data in JPA
         UserDetailsDto dto = this.modelMapper.map(user, UserDetailsDto.class);

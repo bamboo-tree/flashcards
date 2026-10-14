@@ -15,6 +15,6 @@ public interface DeckService {
 
     public void deleteById(long id);
 
-    public DeckDto update(CreateDeckDto updateDeck, long id);
+    public DeckDto update(CreateDeckDto update, long id);
 
 }
