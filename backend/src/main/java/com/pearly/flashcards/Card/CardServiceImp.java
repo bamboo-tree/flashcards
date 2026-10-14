@@ -1,6 +1,8 @@
 package com.pearly.flashcards.Card;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -10,7 +12,12 @@ import com.pearly.flashcards.Card.dto.CardDetailsDto;
 import com.pearly.flashcards.Card.dto.CardDto;
 import com.pearly.flashcards.Card.dto.CreateCardDto;
 
+import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Transactional
+@Slf4j
 public class CardServiceImp implements CardService {
     private final CardRepository cardRepository;
     private final ModelMapper modelMapper;
@@ -30,15 +37,9 @@ public class CardServiceImp implements CardService {
      */
     @Override
     public CardDetailsDto create(CreateCardDto createCardDto) {
-        if (createCardDto == null) {
-            throw new IllegalArgumentException("Provided createCardDto is invalid - DTO is null");
-        }
-        if (createCardDto.getQuestion().isBlank()) {
-            throw new IllegalArgumentException("Provided createCardDto is invalid - question is blank");
-        }
-        if (createCardDto.getAnswer().isBlank()) {
-            throw new IllegalArgumentException("Provided createCardDto is invalid - answer is blank");
-        }
+        log.info("Create new Card.");
+
+        Objects.requireNonNull(createCardDto, "Invalid argument: createCardDto must not be null");
 
         Card card = this.cardRepository.save(this.modelMapper.map(createCardDto, Card.class));
         CardDetailsDto dto = this.modelMapper.map(card, CardDetailsDto.class);
@@ -53,11 +54,13 @@ public class CardServiceImp implements CardService {
      */
     @Override
     public List<CardDto> findAll() {
+        log.info("Find all Cards.");
+
         List<CardDto> dtos = this.cardRepository
                 .findAll()
                 .stream()
                 .map(e -> this.modelMapper.map(e, CardDto.class))
-                .toList();
+                .collect(Collectors.toList());
 
         return dtos;
     }
@@ -68,11 +71,16 @@ public class CardServiceImp implements CardService {
      * @param id Id of the Card.
      * @return Detailed DTO of found Card entity.
      */
-    @Transactional(readOnly = true)
     @Override
     public CardDetailsDto findById(long id) {
-        Card card = this.cardRepository.findById(id).orElseThrow(
-                () -> new IllegalArgumentException("Provided id is invalid - there is no entity with id=" + id));
+        log.info("Find Card id={}.", id);
+
+        Objects.requireNonNull(id, "Invalid argument: id must not be null.");
+
+        Card card = this.cardRepository
+                .findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Provided id is invalid - there is no entity with id=" + id));
         CardDetailsDto dto = this.modelMapper.map(card, CardDetailsDto.class);
 
         return dto;
@@ -85,8 +93,14 @@ public class CardServiceImp implements CardService {
      */
     @Override
     public void deleteById(long id) {
-        Card card = this.cardRepository.findById(id).orElseThrow(
-                () -> new IllegalArgumentException("Provided id is invalid - there is no entity with id=" + id));
+        log.info("Delete Card id={}.", id);
+
+        Objects.requireNonNull(id, "Invalid argument: id must not be null.");
+
+        Card card = this.cardRepository
+                .findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Provided id is invalid - there is no entity with id=" + id));
 
         this.cardRepository.delete(card);
     }
@@ -98,24 +112,27 @@ public class CardServiceImp implements CardService {
      * @param id         Id of the Card.
      * @return DTO of updated Card entity.
      */
-    @Transactional
     @Override
-    public CardDto update(CreateCardDto updateCard, long id) {
-        if (updateCard == null) {
-            throw new IllegalArgumentException("Provided updateCard is invalid - DTO is null");
-        }
-        Card card = this.cardRepository.findById(id).orElseThrow(
-                () -> new IllegalArgumentException("Provided id is invalid - there is no entity with id=" + id));
+    public CardDto update(CreateCardDto update, long id) {
+        log.info("Update Card id={}.", id);
 
-        if (!updateCard.getQuestion().isBlank()) {
-            card.setQuestion(updateCard.getQuestion());
+        Objects.requireNonNull(update, "Invalid argument: update must not be null.");
+        Objects.requireNonNull(id, "Invalid argument: id must not be null.");
+
+        Card card = this.cardRepository
+                .findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Provided id is invalid - there is no entity with id=" + id));
+
+        if (update.getQuestion() != null) {
+            card.setQuestion(update.getQuestion());
         }
-        if (!updateCard.getAnswer().isBlank()) {
-            card.setAnswer(updateCard.getAnswer());
+        if (update.getAnswer() != null) {
+            card.setAnswer(update.getAnswer());
         }
 
-        Card updatedCard = this.cardRepository.save(card);
-        CardDto dto = this.modelMapper.map(updatedCard, CardDto.class);
+        card = this.cardRepository.save(card); // Synchronize data in JPA
+        CardDto dto = this.modelMapper.map(card, CardDto.class);
 
         return dto;
     }

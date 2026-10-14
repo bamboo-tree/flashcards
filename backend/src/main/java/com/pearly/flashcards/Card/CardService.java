@@ -15,5 +15,5 @@ public interface CardService {
 
     public void deleteById(long id);
 
-    public CardDto update(CreateCardDto updateCard, long id);
+    public CardDto update(CreateCardDto update, long id);
 }
