@@ -1,14 +1,17 @@
 package com.pearly.flashcards.Card;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,10 +23,16 @@ import org.modelmapper.ModelMapper;
 import com.pearly.flashcards.Card.dto.CardDetailsDto;
 import com.pearly.flashcards.Card.dto.CardDto;
 import com.pearly.flashcards.Card.dto.CreateCardDto;
+import com.pearly.flashcards.Deck.Deck;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import lombok.extern.slf4j.Slf4j;
 
 @ExtendWith(MockitoExtension.class)
+@Slf4j
 public class CardServiceImpTests {
     @Mock
     private CardRepository cardRepository;
@@ -33,51 +42,122 @@ public class CardServiceImpTests {
     @InjectMocks
     private CardServiceImp cardServiceImp;
 
+    private final Validator validator = Validation
+            .buildDefaultValidatorFactory()
+            .getValidator();
+
     @Test
-    void shouldReturnCardWhenCardExists() {
-        Long cardId = 1L;
-        String question = "Mock Question";
-        String answer = "Mock Answer";
+    void shouldReturnCardDetailsDtoWhenCreateNewCardAndCorrectDataProvided() {
+        log.info("Should return CardDetailsDto when create new card and correct data provided.");
 
-        Card card = new Card(cardId, question, answer, null, null, null);
-        CardDetailsDto cardDetailsDto = new CardDetailsDto(cardId, question, answer, null, null);
+        Long id = 1L;
+        String question = "Question";
+        String answer = "Answer";
+        Deck deck = null;
+        LocalDateTime createdAt = LocalDateTime.now();
+        LocalDateTime updatedAt = null;
 
-        when(cardRepository.findById(cardId)).thenReturn(Optional.of(card));
-        when(modelMapper.map(card, CardDetailsDto.class)).thenReturn(cardDetailsDto);
+        // Correct data provided to service method
+        CreateCardDto createCardDto = CreateCardDto.builder()
+                .question(question)
+                .answer(answer)
+                .build();
+        // Entity mapped from argument
+        Card mappedCard = Card.builder()
+                .question(question)
+                .answer(answer)
+                .build();
+        // Entity after JPA save with auto added id and createdAt date
+        Card persistedCard = Card.builder()
+                .id(id)
+                .question(question)
+                .answer(answer)
+                .deck(deck)
+                .createdAt(createdAt)
+                .updatedAt(updatedAt)
+                .build();
+        // Expected result
+        CardDetailsDto cardDetailsDto = CardDetailsDto.builder()
+                .id(id)
+                .question(question)
+                .answer(answer)
+                .createdAt(createdAt)
+                .updatedAt(updatedAt)
+                .build();
 
-        CardDetailsDto result = cardServiceImp.findById(cardId);
+        when(modelMapper.map(createCardDto, Card.class)).thenReturn(mappedCard);
+        when(cardRepository.save(mappedCard)).thenReturn(persistedCard);
+        when(modelMapper.map(persistedCard, CardDetailsDto.class)).thenReturn(cardDetailsDto);
+        CardDetailsDto result = cardServiceImp.create(createCardDto);
 
         assertNotNull(result);
-        assertEquals(result.getId(), card.getId());
-        assertEquals(result.getAnswer(), card.getAnswer());
-        assertEquals(result.getQuestion(), card.getQuestion());
+        assertEquals(id, result.getId());
+        assertEquals(question, result.getQuestion());
+        assertEquals(answer, result.getAnswer());
+        assertEquals(createdAt, result.getCreatedAt());
+        assertEquals(updatedAt, result.getUpdatedAt());
 
-        verify(cardRepository).findById(cardId);
+        verify(cardRepository).save(mappedCard);
     }
 
     @Test
-    void shouldThrowExceptionWhenCardDoesNotExist() {
-        Long cardId = 1L;
+    void shouldThrowExcpetionWhenCreateNewCardAndNullArgumentProvided() {
+        log.info("Should throw exception when create new card and null argument provided.");
 
-        when(cardRepository.findById(cardId)).thenReturn(Optional.empty());
+        CreateCardDto createCardDto = null;
 
-        assertThrows(EntityNotFoundException.class,
-                () -> cardServiceImp.findById(cardId));
-
-        verify(cardRepository).findById(cardId);
+        assertThrows(NullPointerException.class,
+                () -> cardServiceImp.create(createCardDto));
     }
 
     @Test
-    void shouldReturnAllCards() {
-        Long cardId = 1L;
-        String question = "Mock Question";
-        String answer = "Mock Answer";
+    void shouldThrowExceptionWhenCreateNewCardAndInvalidDataProvided() {
+        log.info("Should throw exception when create new card and invalid data provided.");
 
+        String question = "1"; // Too short
+        String answer = ""; // Must not be blank
+
+        // Invalid data provided to service method
+        CreateCardDto createCardDto = CreateCardDto.builder()
+                .question(question)
+                .answer(answer)
+                .build();
+
+        Set<ConstraintViolation<CreateCardDto>> violations = validator.validate(createCardDto);
+
+        assertFalse(violations.isEmpty());
+        violations.forEach(e -> System.out.println(e.getPropertyPath() + " : " + e.getMessage()));
+    }
+
+    @Test
+    void shouldReturnListOfCardDtoWhenFindAll() {
+        log.info("Should return List<CardDto> when find all.");
+
+        Long id = 1L;
+        String question = "Question";
+        String answer = "Answer";
+        Deck deck = null;
+        LocalDateTime createdAt = LocalDateTime.now();
+        LocalDateTime updatedAt = null;
+
+        // Cards in JPA
         List<Card> cards = new ArrayList<>();
+        // Mapped CardDtos
         List<CardDto> cardDtos = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
-            cards.add(new Card(cardId + i, question + i, answer + i, null, null, null));
-            cardDtos.add(new CardDto(cardId + i, question + i, answer + i));
+            cards.add(Card.builder()
+                    .id(id + 1)
+                    .question(question)
+                    .answer(answer)
+                    .deck(deck)
+                    .createdAt(createdAt)
+                    .updatedAt(updatedAt)
+                    .build());
+            cardDtos.add(CardDto.builder()
+                    .id(id + 1)
+                    .question(question)
+                    .answer(answer)
+                    .build());
         }
 
         when(cardRepository.findAll()).thenReturn(cards);
@@ -89,156 +169,260 @@ public class CardServiceImpTests {
 
         assertNotNull(result);
         for (int i = 0; i < 5; i++) {
-            assertEquals(cardId + i, result.get(i).getId());
-            assertEquals(question + i, result.get(i).getQuestion());
-            assertEquals(answer + i, result.get(i).getAnswer());
+            assertEquals(id + 1, result.get(i).getId());
+            assertEquals(question, result.get(i).getQuestion());
+            assertEquals(answer, result.get(i).getAnswer());
         }
 
         verify(cardRepository).findAll();
     }
 
     @Test
-    void shouldCreateNewCard() {
-        Long cardId = 1L;
-        String question = "Mock Question";
-        String answer = "Mock Answer";
+    void shouldReturnCardDetailsDtoWhenFindByIdAndValidIdProvided() {
+        log.info("Should return CardDetailsDto when find by id and valid id provided.");
 
-        Card card = new Card(cardId, question, answer, null, null, null);
-        CreateCardDto createCardDto = new CreateCardDto(question, answer);
-        Card mappedCard = new Card(null, question, answer, null, null, null);
-        CardDetailsDto cardDetailsDto = new CardDetailsDto(cardId, question, answer, null, null);
+        Long id = 1L;
+        String question = "Question";
+        String answer = "Answer";
+        Deck deck = null;
+        LocalDateTime createdAt = LocalDateTime.now();
+        LocalDateTime updatedAt = null;
 
-        when(modelMapper.map(createCardDto, Card.class)).thenReturn(mappedCard);
-        when(cardRepository.save(mappedCard)).thenReturn(card);
+        // Card in JPA
+        Card card = Card.builder()
+                .id(id)
+                .question(question)
+                .answer(answer)
+                .deck(deck)
+                .createdAt(createdAt)
+                .updatedAt(updatedAt)
+                .build();
+        // Mapped CardDetailsDto
+        CardDetailsDto cardDetailsDto = CardDetailsDto.builder()
+                .id(id)
+                .question(question)
+                .answer(answer)
+                .createdAt(createdAt)
+                .updatedAt(updatedAt)
+                .build();
+
+        when(cardRepository.findById(id)).thenReturn(Optional.of(card));
         when(modelMapper.map(card, CardDetailsDto.class)).thenReturn(cardDetailsDto);
 
-        CardDetailsDto result = cardServiceImp.create(createCardDto);
+        CardDetailsDto result = cardServiceImp.findById(id);
 
         assertNotNull(result);
-        assertEquals(cardId, result.getId());
+        assertEquals(id, result.getId());
         assertEquals(question, result.getQuestion());
         assertEquals(answer, result.getAnswer());
+        assertEquals(createdAt, result.getCreatedAt());
+        assertEquals(updatedAt, result.getUpdatedAt());
 
-        verify(cardRepository).save(mappedCard);
+        verify(cardRepository).findById(id);
     }
 
     @Test
-    void shouldThrowExceptionWhenCreateNewCardAndArgumentIsNull() {
-        CreateCardDto createCardDto = null;
+    void shouldThrowExceptionWhenFindByIdAndNullIdProvided() {
+        log.info("Should throw exception when find by id and null id provided.");
+
+        Long id = null;
+
+        assertThrows(NullPointerException.class,
+                () -> cardServiceImp.findById(id));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenFindByIdAndIllegalIdProvided() {
+        log.info("Should throw exception when find by id and illegal id provided.");
+
+        Long id1 = -1L; // negative
+        Long id2 = 0L; // not positive
 
         assertThrows(IllegalArgumentException.class,
-                () -> cardServiceImp.create(createCardDto));
-    }
-
-    @Test
-    void shouldThrowExceptionWhenCreateNewCardAndSomeFieldIsBlank() {
-        String question = "Mock Question";
-        String answer = "";
-
-        CreateCardDto createCardDto = new CreateCardDto(question, answer);
-
+                () -> cardServiceImp.findById(id1));
         assertThrows(IllegalArgumentException.class,
-                () -> cardServiceImp.create(createCardDto));
+                () -> cardServiceImp.findById(id2));
     }
 
     @Test
-    void shouldDeleteCardByIdWhenEntityExists() {
-        Long cardId = 1L;
+    void shouldThrowExceptionWhenFindByIdAndEntityNotFound() {
+        log.info("Should throw exception when find by id and entity not found.");
 
-        when(cardRepository.findById(cardId)).thenReturn(Optional.of(new Card()));
-
-        cardServiceImp.deleteById(cardId);
-
-        verify(cardRepository).deleteById(cardId);
-    }
-
-    @Test
-    void shouldThrowExceptionWhenDeleteByIdAndEntityDoesNotExist() {
-        Long cardId = 1L;
+        Long id = 1L;
 
         assertThrows(EntityNotFoundException.class,
-                () -> cardServiceImp.deleteById(cardId));
+                () -> cardServiceImp.findById(id));
+
+        verify(cardRepository).findById(id);
     }
 
     @Test
-    void shouldUpdateCardWhenCorrectDataProvided() {
-        Long cardId = 1L;
-        String question = "Mock Question";
-        String answer = "Mock Answer";
-        String updatedQuestion = "Updated Question";
-        String updatedAnswer = "Updated Answer";
+    void shouldDeleteCardWhenDeleteCardByIdAndValidIdProvided() {
+        log.info("Should delete card when delte card by id and valid id provided.");
 
-        // Original data
-        Card card = new Card(cardId, question, answer, null, null, null);
-        // Update data
-        CreateCardDto createCardDto = new CreateCardDto(updatedQuestion, updatedAnswer);
-        CardDto cardDto = new CardDto(cardId, updatedQuestion, updatedAnswer);
+        Long id = 1L;
 
-        when(cardRepository.findById(cardId)).thenReturn(Optional.of(card));
+        when(cardRepository.findById(id)).thenReturn(Optional.of(new Card()));
+
+        cardServiceImp.deleteById(id);
+
+        verify(cardRepository).deleteById(id);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenDeleteByIdAndNullIdProvided() {
+        log.info("Should throw exception when delete by id and null id provided.");
+
+        Long id = null;
+
+        assertThrows(NullPointerException.class,
+                () -> cardServiceImp.deleteById(id));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenDeleteByIdAndIllegalIdProvided() {
+        log.info("Should throw exception when delete by id and illegal id provided.");
+
+        Long id1 = -1L; // negative
+        Long id2 = 0L; // not positive
+
+        assertThrows(IllegalArgumentException.class,
+                () -> cardServiceImp.deleteById(id1));
+        assertThrows(IllegalArgumentException.class,
+                () -> cardServiceImp.deleteById(id2));
+    }
+
+    @Test
+    void shouldThrowExcpetionWhenDeleteByIdAndEntityNotFound() {
+        log.info("Should throw exception when delete by id and entity not found.");
+
+        Long id = 1L;
+
+        assertThrows(EntityNotFoundException.class,
+                () -> cardServiceImp.deleteById(id));
+    }
+
+    @Test
+    void shouldReturnUpdatedCardDtoWhenUpdateAndValidDataProvided() {
+        log.info("Should return updated CardDto when update and valid data provided.");
+
+        Long id = 1L;
+        String question = "Question";
+        String answer = "Answer";
+        String newQuestion = "New Question";
+        String newAnswer = "New Answer";
+        Deck deck = null;
+        LocalDateTime createdAt = LocalDateTime.now();
+        LocalDateTime updatedAt = null;
+
+        // Card in JPA - original data
+        Card card = Card.builder()
+                .id(id)
+                .question(question)
+                .answer(answer)
+                .deck(deck)
+                .createdAt(createdAt)
+                .updatedAt(updatedAt)
+                .build();
+        // Mapped CreateCardDto - update data
+        CreateCardDto createCardDto = CreateCardDto.builder()
+                .question(newQuestion)
+                .answer(newAnswer)
+                .build();
+        // Updated CardDto - expected result after update
+        CardDto updated = CardDto.builder()
+                .id(id)
+                .question(newQuestion)
+                .answer(newAnswer)
+                .build();
+
+        when(cardRepository.findById(id)).thenReturn(Optional.of(card));
         when(cardRepository.save(card)).thenReturn(card);
-        when(modelMapper.map(card, CardDto.class)).thenReturn(cardDto);
+        when(modelMapper.map(card, CardDto.class)).thenReturn(updated);
 
-        CardDto result = cardServiceImp.update(createCardDto, cardId);
+        CardDto result = cardServiceImp.update(createCardDto, id);
 
         assertNotNull(result);
-        assertEquals(cardId, result.getId());
-        assertEquals(updatedQuestion, result.getQuestion());
-        assertEquals(updatedAnswer, result.getAnswer());
+        assertEquals(id, result.getId());
+        assertEquals(newQuestion, result.getQuestion());
+        assertEquals(newAnswer, result.getAnswer());
 
-        verify(cardRepository).findById(cardId);
+        verify(cardRepository).findById(id);
         verify(cardRepository).save(card);
     }
 
     @Test
-    void shouldThrowExceptionWhenUpdateCardAndNoUpdateDataProvided() {
-        Long cardId = 1L;
+    void shouldThrowExceptionWhenUpdateCardAndNullUpdateDataProvided() {
+        log.info("Should throw exception when update card and null update data provided.");
+
+        Long id = 1L;
+        CreateCardDto update = null;
+
+        assertThrows(NullPointerException.class,
+                () -> cardServiceImp.update(update, id));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUpdateCardAndNullIdProvided() {
+        log.info("Should throw exception when update card and null id provided.");
+
+        Long id = null;
+        CreateCardDto update = new CreateCardDto(); // empty body does not matter in this test
+
+        assertThrows(NullPointerException.class,
+                () -> cardServiceImp.update(update, id));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUpdateCardAndIllegalIdProvided() {
+        log.info("Should throw exception when update card and illegal id provided.");
+
+        Long id1 = -1L; // negative
+        Long id2 = 0L; // not positive
+        CreateCardDto update = new CreateCardDto(); // empty body does not matter in this test
 
         assertThrows(IllegalArgumentException.class,
-                () -> cardServiceImp.update(null, cardId));
+                () -> cardServiceImp.update(update, id1));
+        assertThrows(IllegalArgumentException.class,
+                () -> cardServiceImp.update(update, id2));
     }
 
     @Test
-    void shouldThrowExceptionWhenUpdateCardAndEntityDoesNotExist() {
-        Long cardId = 1L;
-        String updatedQuestion = "Updated Question";
-        String updatedAnswer = "Updated Answer";
+    void shouldThrowExceptionWhenUpdateCardAndEntityNotFound() {
+        log.info("Should throw exception when update and entity not found.");
 
-        CreateCardDto createCardDto = new CreateCardDto(updatedQuestion, updatedAnswer);
+        Long id = 1L;
+        String newQuestion = "New Question";
+        String newAnswer = "New Answer";
 
-        when(cardRepository.findById(cardId)).thenReturn(Optional.empty());
+        // Mapped CreateCardDto - update data
+        CreateCardDto createCardDto = CreateCardDto.builder()
+                .question(newQuestion)
+                .answer(newAnswer)
+                .build();
 
         assertThrows(EntityNotFoundException.class,
-                () -> cardServiceImp.update(createCardDto, cardId));
+                () -> cardServiceImp.update(createCardDto, id));
 
-        verify(cardRepository).findById(cardId);
+        verify(cardRepository).findById(id);
     }
 
     @Test
-    void shouldUpdateCardWhenNotAllFieldsInUpdateDataProvided() {
-        Long cardId = 1L;
-        String question = "Mock Question";
-        String answer = "Mock Answer";
-        String updatedQuestion = null;
-        String updatedAnswer = "Updated Answer";
+    void shouldThrowExceptionWhenUpdateCardAndNotAllFieldsProvidedInUpdateBody() {
+        log.info("Should throw exception when update card and not all fields provided in update body");
 
-        // Original data
-        Card card = new Card(cardId, question, answer, null, null, null);
-        // Update data
-        CreateCardDto createCardDto = new CreateCardDto(updatedQuestion, updatedAnswer);
-        CardDto cardDto = new CardDto(cardId, updatedQuestion, updatedAnswer);
+        String newQuestion = null; // missing field
+        String newAnswer = "New Answer"; // new answer
 
-        when(cardRepository.findById(cardId)).thenReturn(Optional.of(card));
-        when(cardRepository.save(card)).thenReturn(card);
-        when(modelMapper.map(card, CardDto.class)).thenReturn(cardDto);
+        // Update data with missing fields
+        CreateCardDto createCardDto = CreateCardDto.builder()
+                .question(newQuestion)
+                .answer(newAnswer)
+                .build();
 
-        CardDto result = cardServiceImp.update(createCardDto, cardId);
+        Set<ConstraintViolation<CreateCardDto>> violations = validator.validate(createCardDto);
 
-        assertNotNull(result);
-        assertEquals(cardId, result.getId());
-        assertEquals(updatedQuestion, result.getQuestion());
-        assertEquals(updatedAnswer, result.getAnswer());
-
-        verify(cardRepository).findById(cardId);
-        verify(cardRepository).save(card);
+        assertFalse(violations.isEmpty());
+        violations.forEach(e -> System.out.println(e.getPropertyPath() + " : " + e.getMessage()));
     }
 }

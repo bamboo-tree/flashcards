@@ -7,17 +7,20 @@ import java.util.stream.Collectors;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import com.pearly.flashcards.Card.dto.CardDetailsDto;
 import com.pearly.flashcards.Card.dto.CardDto;
 import com.pearly.flashcards.Card.dto.CreateCardDto;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Transactional
 @Slf4j
+@Validated
 public class CardServiceImp implements CardService {
     private final CardRepository cardRepository;
     private final ModelMapper modelMapper;
@@ -36,7 +39,7 @@ public class CardServiceImp implements CardService {
      * @return Detailed DTO of newly created Card entity.
      */
     @Override
-    public CardDetailsDto create(CreateCardDto createCardDto) {
+    public CardDetailsDto create(@Valid CreateCardDto createCardDto) {
         log.info("Create new Card.");
 
         Objects.requireNonNull(createCardDto, "Invalid argument: createCardDto must not be null");
@@ -76,6 +79,9 @@ public class CardServiceImp implements CardService {
         log.info("Find Card id={}.", id);
 
         Objects.requireNonNull(id, "Invalid argument: id must not be null.");
+        if (id <= 0 || id > Long.MAX_VALUE) {
+            throw new IllegalArgumentException("Invalid argument: id must be positive value.");
+        }
 
         Card card = this.cardRepository
                 .findById(id)
@@ -96,40 +102,42 @@ public class CardServiceImp implements CardService {
         log.info("Delete Card id={}.", id);
 
         Objects.requireNonNull(id, "Invalid argument: id must not be null.");
+        if (id <= 0 || id > Long.MAX_VALUE) {
+            throw new IllegalArgumentException("Invalid argument: id must be positive value.");
+        }
 
-        Card card = this.cardRepository
+        this.cardRepository
                 .findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Provided id is invalid - there is no entity with id=" + id));
 
-        this.cardRepository.delete(card);
+        this.cardRepository.deleteById(id);
     }
 
     /**
      * Update Card body with provided id in the JPA repository.
      *
-     * @param updateCard DTO with updated body. Only present data will be replaced.
+     * @param updateCard DTO with updated body.
      * @param id         Id of the Card.
      * @return DTO of updated Card entity.
      */
     @Override
-    public CardDto update(CreateCardDto update, long id) {
+    public CardDto update(@Valid CreateCardDto update, long id) {
         log.info("Update Card id={}.", id);
 
         Objects.requireNonNull(update, "Invalid argument: update must not be null.");
         Objects.requireNonNull(id, "Invalid argument: id must not be null.");
+        if (id <= 0 || id > Long.MAX_VALUE) {
+            throw new IllegalArgumentException("Invalid argument: id must be positive value.");
+        }
 
         Card card = this.cardRepository
                 .findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Provided id is invalid - there is no entity with id=" + id));
 
-        if (update.getQuestion() != null) {
-            card.setQuestion(update.getQuestion());
-        }
-        if (update.getAnswer() != null) {
-            card.setAnswer(update.getAnswer());
-        }
+        card.setQuestion(update.getQuestion());
+        card.setAnswer(update.getAnswer());
 
         card = this.cardRepository.save(card); // Synchronize data in JPA
         CardDto dto = this.modelMapper.map(card, CardDto.class);
