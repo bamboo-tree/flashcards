@@ -6,8 +6,10 @@ import com.pearly.flashcards.Card.dto.CardDetailsDto;
 import com.pearly.flashcards.Card.dto.CardDto;
 import com.pearly.flashcards.Card.dto.CreateCardDto;
 
+import jakarta.validation.Valid;
+
 public interface CardService {
-    public CardDetailsDto create(CreateCardDto createCardDto);
+    public CardDetailsDto create(@Valid CreateCardDto createCardDto);
 
     public List<CardDto> findAll();
 
@@ -15,5 +17,5 @@ public interface CardService {
 
     public void deleteById(long id);
 
-    public CardDto update(CreateCardDto update, long id);
+    public CardDto update(@Valid CreateCardDto update, long id);
 }
