@@ -21,6 +21,8 @@ import jakarta.persistence.PreUpdate;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @RequiredArgsConstructor
+@AllArgsConstructor
+@Builder
 @EqualsAndHashCode
 public class Deck {
     @Id
@@ -42,7 +46,8 @@ public class Deck {
     private String name;
 
     @OneToMany(mappedBy = "deck", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Card> cards = new ArrayList<>();
+    @EqualsAndHashCode.Exclude
+    private final List<Card> cards = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "person_id")

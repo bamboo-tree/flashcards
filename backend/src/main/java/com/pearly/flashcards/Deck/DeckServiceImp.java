@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import com.pearly.flashcards.Card.Card;
 import com.pearly.flashcards.Card.CardRepository;
@@ -15,10 +16,12 @@ import com.pearly.flashcards.Deck.dto.DeckDetailsDto;
 import com.pearly.flashcards.Deck.dto.DeckDto;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Transactional
+@Validated
 @Slf4j
 public class DeckServiceImp implements DeckService {
 
@@ -42,7 +45,7 @@ public class DeckServiceImp implements DeckService {
      * @return Detailed DTO of newly created Deck entity.
      */
     @Override
-    public DeckDetailsDto create(CreateDeckDto createDeckDto) {
+    public DeckDetailsDto create(@Valid CreateDeckDto createDeckDto) {
         log.info("Create new Deck.");
 
         Objects.requireNonNull(createDeckDto, "Invalid argument: createDeckDto must not be null.");
@@ -82,6 +85,9 @@ public class DeckServiceImp implements DeckService {
         log.info("Find Deck id={}.", id);
 
         Objects.requireNonNull(id, "Invalid argument: id must not be null.");
+        if(id <= 0 || id > Long.MAX_VALUE) {
+            throw new IllegalArgumentException("Invalid argument: id must be positive value.");
+        }
 
         Deck deck = this.deckRepository
                 .findById(id)
@@ -102,13 +108,16 @@ public class DeckServiceImp implements DeckService {
         log.info("Delete Deck id={}.", id);
 
         Objects.requireNonNull(id, "Invalid argument: id must not be null.");
+        if(id <= 0 || id > Long.MAX_VALUE) {
+            throw new IllegalArgumentException("Invalid argument: id must be positive value.");
+        }
 
-        Deck deck = this.deckRepository
+        this.deckRepository
                 .findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Provided id is invalid - there is no entity with id=" + id));
 
-        this.deckRepository.delete(deck);
+        this.deckRepository.deleteById(id);
     }
 
     /**
@@ -119,20 +128,21 @@ public class DeckServiceImp implements DeckService {
      * @return DTO of updated Deck entity.
      */
     @Override
-    public DeckDto update(CreateDeckDto update, long id) {
+    public DeckDto update(@Valid CreateDeckDto update, long id) {
         log.info("Update Deck id={}.", id);
 
         Objects.requireNonNull(update, "Invalid argument: update must not be null.");
         Objects.requireNonNull(id, "Invalid argument: id must not be null.");
+        if(id <= 0 || id > Long.MAX_VALUE) {
+            throw new IllegalArgumentException("Invalid argument: id must be positive value.");
+        }
 
         Deck deck = this.deckRepository
                 .findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Provided id is invalid - there is no entity with id=" + id));
 
-        if (update.getName() != null) {
-            deck.setName(update.getName());
-        }
+        deck.setName(update.getName());
 
         deck = this.deckRepository.save(deck); // Synchronize data in JPA
         DeckDto dto = this.modelMapper.map(deck, DeckDto.class);
@@ -151,7 +161,13 @@ public class DeckServiceImp implements DeckService {
         log.info("Add Card id={} to Deck id={}.", cardId, deckId);
 
         Objects.requireNonNull(deckId, "Invalid argument: deckId must not be null.");
+        if(deckId <= 0 || deckId > Long.MAX_VALUE) {
+            throw new IllegalArgumentException("Invalid argument: deckId must be positive value.");
+        }
         Objects.requireNonNull(cardId, "Invalid argument: cardId must not be null.");
+        if(cardId <= 0 || cardId > Long.MAX_VALUE) {
+            throw new IllegalArgumentException("Invalid argument: cardId must be positive value.");
+        }
 
         Deck deck = this.deckRepository
                 .findById(deckId)
@@ -182,7 +198,13 @@ public class DeckServiceImp implements DeckService {
         log.info("Delete Card id={} from Deck id={}.", cardId, deckId);
 
         Objects.requireNonNull(deckId, "Invalid argument: deckId must not be null.");
+        if(deckId <= 0 || deckId > Long.MAX_VALUE) {
+            throw new IllegalArgumentException("Invalid argument: deckId must be positive value.");
+        }
         Objects.requireNonNull(cardId, "Invalid argument: cardId must not be null.");
+        if(cardId <= 0 || cardId > Long.MAX_VALUE) {
+            throw new IllegalArgumentException("Invalid argument: cardId must be positive value.");
+        }
 
         Deck deck = this.deckRepository
                 .findById(deckId)

@@ -47,6 +47,7 @@ public class Card {
 
     @ManyToOne
     @JoinColumn(name = "deck_id")
+    @EqualsAndHashCode.Exclude
     private Deck deck;
 
     @NotNull(message = "CreatedAt must not be blank.")
