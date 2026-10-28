@@ -37,7 +37,6 @@ public class DeckController {
     @PostMapping
     public ResponseEntity<DeckDetailsDto> create(@RequestBody @Valid CreateDeckDto createDeckDto) {
         log.info("POST: /api/decks - create.");
-        log.info(createDeckDto.toString());
         DeckDetailsDto response = this.deckServiceImp.create(createDeckDto);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
