@@ -6,8 +6,10 @@ import com.pearly.flashcards.User.dto.CreateUserDto;
 import com.pearly.flashcards.User.dto.UserDetailsDto;
 import com.pearly.flashcards.User.dto.UserDto;
 
+import jakarta.validation.Valid;
+
 public interface UserService {
-    public UserDetailsDto create(CreateUserDto createUserDto);
+    public UserDetailsDto create(@Valid CreateUserDto createUserDto);
 
     public List<UserDto> findAll();
 
@@ -15,7 +17,7 @@ public interface UserService {
 
     public void deleteById(long id);
 
-    public UserDto update(CreateUserDto update, long id);
+    public UserDto update(@Valid CreateUserDto update, long id);
 
     public UserDetailsDto addDeckById(long userId, long deckId);
 

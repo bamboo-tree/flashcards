@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import com.pearly.flashcards.Deck.Deck;
 import com.pearly.flashcards.Deck.DeckRepository;
@@ -15,11 +16,13 @@ import com.pearly.flashcards.User.dto.UserDetailsDto;
 import com.pearly.flashcards.User.dto.UserDto;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Transactional
 @Slf4j
+@Validated
 public class UserServiceImp implements UserService {
 
     private final UserRepository userRepository;
@@ -42,7 +45,7 @@ public class UserServiceImp implements UserService {
      * @return Detailed DTO of newly created User entity.
      */
     @Override
-    public UserDetailsDto create(CreateUserDto createUserDto) {
+    public UserDetailsDto create(@Valid CreateUserDto createUserDto) {
         log.info("Create new User.");
 
         Objects.requireNonNull(createUserDto, "Invalid argument: createUserDto must not be null.");
@@ -82,6 +85,9 @@ public class UserServiceImp implements UserService {
         log.info("Find User id={}.", id);
 
         Objects.requireNonNull(id, "Invalid argument: id must not be null.");
+        if(id <= 0 || id > Long.MAX_VALUE) {
+            throw new IllegalArgumentException("Invalid argument: id must be positive value.");
+        }
 
         User user = this.userRepository
                 .findById(id)
@@ -102,13 +108,16 @@ public class UserServiceImp implements UserService {
         log.info("Delete User id={}.", id);
 
         Objects.requireNonNull(id, "Invalid argument: id must not be null.");
+        if(id <= 0 || id > Long.MAX_VALUE) {
+            throw new IllegalArgumentException("Invalid argument: id must be positive value.");
+        }
 
-        User user = this.userRepository
+        this.userRepository
                 .findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Provided id is invalid - there is no entity with id=" + id));
 
-        this.userRepository.delete(user);
+        this.userRepository.deleteById(id);
     }
 
     /**
@@ -119,11 +128,14 @@ public class UserServiceImp implements UserService {
      * @return DTO of updated User entity.
      */
     @Override
-    public UserDto update(CreateUserDto update, long id) {
+    public UserDto update(@Valid CreateUserDto update, long id) {
         log.info("Update User id={}.", id);
 
         Objects.requireNonNull(update, "Invalid argument: update must not be null.");
         Objects.requireNonNull(id, "Invalid argument: id must not be null.");
+        if(id <= 0 || id > Long.MAX_VALUE) {
+            throw new IllegalArgumentException("Invalid argument: id must be positive value.");
+        }
 
         User user = this.userRepository
                 .findById(id)
@@ -152,7 +164,13 @@ public class UserServiceImp implements UserService {
         log.info("Add Deck id={} to User id={}.", deckId, userId);
 
         Objects.requireNonNull(userId, "Invalid argument: userId must not be null.");
+        if(userId <= 0 || userId > Long.MAX_VALUE) {
+            throw new IllegalArgumentException("Invalid argument: userId must be positive value.");
+        }
         Objects.requireNonNull(deckId, "Invalid argument: deckId must not be null.");
+        if(deckId <= 0 || deckId > Long.MAX_VALUE) {
+            throw new IllegalArgumentException("Invalid argument: deckId must be positive value.");
+        }
 
         User user = this.userRepository
                 .findById(userId)
@@ -184,7 +202,13 @@ public class UserServiceImp implements UserService {
         log.info("Delete Deck id={} from User id={}.", deckId, userId);
 
         Objects.requireNonNull(userId, "Invalid argument: userId must not be null.");
+        if(userId <= 0 || userId > Long.MAX_VALUE) {
+            throw new IllegalArgumentException("Invalid argument: userId must be positive value.");
+        }
         Objects.requireNonNull(deckId, "Invalid argument: deckId must not be null.");
+        if(deckId <= 0 || deckId > Long.MAX_VALUE) {
+            throw new IllegalArgumentException("Invalid argument: deckId must be positive value.");
+        }
 
         User user = this.userRepository
                 .findById(userId)

@@ -51,6 +51,7 @@ public class Deck {
 
     @ManyToOne
     @JoinColumn(name = "person_id")
+    @EqualsAndHashCode.Exclude
     private User owner;
 
     @NotNull(message = "CreatedAt must not be blank.")

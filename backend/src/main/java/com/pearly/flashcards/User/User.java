@@ -18,6 +18,8 @@ import jakarta.persistence.PreUpdate;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +29,9 @@ import lombok.Setter;
 @Getter
 @Setter
 @RequiredArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode
+@Builder
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,7 +43,8 @@ public class User {
     private String userName;
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Deck> decks = new ArrayList<>();
+    @EqualsAndHashCode.Exclude
+    private final List<Deck> decks = new ArrayList<>();
 
     @NotNull(message = "CreatedAt must not be blank.")
     private LocalDateTime createdAt;

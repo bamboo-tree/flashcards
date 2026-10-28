@@ -248,8 +248,9 @@ public class DeckServiceImpTests {
         log.info("Should delete deck when delete deck by id and valid id provided.");
 
         Long id = 1L;
+        Deck deck = new Deck();
 
-        when(deckRepository.findById(id)).thenReturn(Optional.of(new Deck()));
+        when(deckRepository.findById(id)).thenReturn(Optional.of(deck));
 
         deckServiceImp.deleteById(id);
 
