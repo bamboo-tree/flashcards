@@ -40,7 +40,7 @@ public class Deck {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name", nullable = false, unique = true)
+    @Column(name = "name", nullable = false, unique = false)
     @NotBlank(message = "Name must not be blank.")
     @Size(min = 3, max = 100, message = "Name must have at lest 3 and at most 100 characters.")
     private String name;

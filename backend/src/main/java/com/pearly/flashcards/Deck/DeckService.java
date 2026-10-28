@@ -6,8 +6,10 @@ import com.pearly.flashcards.Deck.dto.CreateDeckDto;
 import com.pearly.flashcards.Deck.dto.DeckDetailsDto;
 import com.pearly.flashcards.Deck.dto.DeckDto;
 
+import jakarta.validation.Valid;
+
 public interface DeckService {
-    public DeckDetailsDto create(CreateDeckDto createDeckDto);
+    public DeckDetailsDto create(@Valid CreateDeckDto createDeckDto);
 
     public List<DeckDto> findAll();
 
@@ -15,6 +17,6 @@ public interface DeckService {
 
     public void deleteById(long id);
 
-    public DeckDto update(CreateDeckDto update, long id);
+    public DeckDto update(@Valid CreateDeckDto update, long id);
 
 }

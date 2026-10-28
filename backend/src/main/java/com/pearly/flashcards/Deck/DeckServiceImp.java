@@ -180,8 +180,9 @@ public class DeckServiceImp implements DeckService {
 
         deck.addCard(card);
         card.addDeck(deck);
-
+        card = this.cardRepository.save(card);
         deck = this.deckRepository.save(deck); // Synchronize data in JPA
+
         DeckDetailsDto dto = this.modelMapper.map(deck, DeckDetailsDto.class);
 
         return dto;
@@ -217,8 +218,9 @@ public class DeckServiceImp implements DeckService {
 
         deck.deleteCard(card);
         card.deleteDeck();
-
+        card = this.cardRepository.save(card);
         deck = this.deckRepository.save(deck); // Synchronize data in JPA
+
         DeckDetailsDto dto = this.modelMapper.map(deck, DeckDetailsDto.class);
 
         return dto;
